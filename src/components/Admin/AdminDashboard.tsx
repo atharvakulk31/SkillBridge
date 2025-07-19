@@ -14,7 +14,7 @@ import Header from '../Layout/Header';
 import LoadingSpinner from '../LoadingSpinner';
 import AdminDashboardContent from './AdminDashboardContent';
 import StudentManagement from './StudentManagement';
-import DriveManagement from './DriveManagement'; // Make sure this component exists
+import DriveManagement from './DriveManagement'; 
 
 interface SidebarItem {
   id: string;

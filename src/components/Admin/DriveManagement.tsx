@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { Plus, Search, Filter, Download, Edit2, Trash2, X, ChevronDown, Check } from 'lucide-react';
 
 interface EligibilityCriteria {
-  minCGPA?: number;
-  maxBacklogs?: number;
-  branches?: string[];
-  batchYear?: number;
-  additionalRequirements?: string;
+  minCGPA: number;
+  maxBacklogs: number;
+  branches: string[];
+  batchYear: number;
+  additionalRequirements: string;
+  tenthPercentage?: number;
+  twelfthPercentage?: number;
+  diplomaPercentage?: number;
 }
 
 interface Drive {
@@ -20,6 +23,17 @@ interface Drive {
   eligibility: EligibilityCriteria;
 }
 
+const allBranches = [
+  'Computer Science',
+  'Information Technology',
+  'Electronics',
+  'Electrical',
+  'Mechanical',
+  'Civil',
+  'Chemical',
+  'Biotechnology'
+];
+
 const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('All');
@@ -28,21 +42,19 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
   const [currentDrive, setCurrentDrive] = useState<Drive | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [statusChangeId, setStatusChangeId] = useState<number | null>(null);
-  const [eligibilityModalOpen, setEligibilityModalOpen] = useState(false);
   const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
-  
-  const allBranches = [
-    'Computer Science',
-    'Information Technology',
-    'Electronics',
-    'Electrical',
-    'Mechanical',
-    'Civil',
-    'Chemical',
-    'Biotechnology'
-  ];
 
-  // Open modal for adding/editing drive
+  const defaultEligibility: EligibilityCriteria = {
+    minCGPA: 6.0,
+    maxBacklogs: 0,
+    branches: [...allBranches],
+    batchYear: new Date().getFullYear(),
+    additionalRequirements: '',
+    tenthPercentage: 60,
+    twelfthPercentage: 60,
+    diplomaPercentage: 60
+  };
+
   const openDriveModal = (drive: Drive | null = null) => {
     setCurrentDrive(drive || {
       id: 0,
@@ -52,45 +64,58 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
       deadline: '',
       status: 'Draft',
       package: '',
-      eligibility: {
-        minCGPA: 0,
-        maxBacklogs: 0,
-        branches: [],
-        batchYear: new Date().getFullYear(),
-        additionalRequirements: ''
-      }
+      eligibility: { ...defaultEligibility }
     });
-    setSelectedBranches(drive?.eligibility?.branches || []);
+    setSelectedBranches(drive?.eligibility?.branches || [...allBranches]);
     setIsModalOpen(true);
   };
 
-  // Handle form input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setCurrentDrive(prev => ({
-      ...(prev || {
-        id: 0,
-        company: '',
-        position: '',
-        applications: 0,
-        deadline: '',
-        status: 'Draft',
-        package: '',
+    
+    if (name.startsWith('eligibility.')) {
+      const eligibilityField = name.split('.')[1];
+      setCurrentDrive(prev => ({
+        ...(prev || {
+          id: 0,
+          company: '',
+          position: '',
+          applications: 0,
+          deadline: '',
+          status: 'Draft',
+          package: '',
+          eligibility: { ...defaultEligibility }
+        }),
         eligibility: {
-          minCGPA: 0,
-          maxBacklogs: 0,
-          branches: [],
-          batchYear: new Date().getFullYear(),
-          additionalRequirements: ''
+          ...(prev?.eligibility || { ...defaultEligibility }),
+          [eligibilityField]: ['minCGPA', 'maxBacklogs', 'batchYear', 'tenthPercentage', 'twelfthPercentage', 'diplomaPercentage'].includes(eligibilityField)
+            ? parseFloat(value) || 0
+            : value
         }
-      }),
-      [name]: name === 'applications' ? parseInt(value) || 0 : value
-    }));
+      }));
+    } else {
+      setCurrentDrive(prev => ({
+        ...(prev || {
+          id: 0,
+          company: '',
+          position: '',
+          applications: 0,
+          deadline: '',
+          status: 'Draft',
+          package: '',
+          eligibility: { ...defaultEligibility }
+        }),
+        [name]: name === 'applications' ? parseInt(value) || 0 : value
+      }));
+    }
   };
 
-  // Handle eligibility criteria changes
-  const handleEligibilityChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+  const toggleBranchSelection = (branch: string) => {
+    const newBranches = selectedBranches.includes(branch)
+      ? selectedBranches.filter(b => b !== branch)
+      : [...selectedBranches, branch];
+    
+    setSelectedBranches(newBranches);
     setCurrentDrive(prev => ({
       ...(prev || {
         id: 0,
@@ -100,39 +125,36 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
         deadline: '',
         status: 'Draft',
         package: '',
-        eligibility: {
-          minCGPA: 0,
-          maxBacklogs: 0,
-          branches: [],
-          batchYear: new Date().getFullYear(),
-          additionalRequirements: ''
-        }
+        eligibility: { ...defaultEligibility }
       }),
       eligibility: {
-        ...(prev?.eligibility || {
-          minCGPA: 0,
-          maxBacklogs: 0,
-          branches: [],
-          batchYear: new Date().getFullYear(),
-          additionalRequirements: ''
-        }),
-        [name]: name.includes('minCGPA') || name.includes('maxBacklogs') || name.includes('batchYear') 
-          ? parseFloat(value) || 0 
-          : value
+        ...(prev?.eligibility || { ...defaultEligibility }),
+        branches: newBranches
       }
     }));
   };
 
-  // Toggle branch selection
-  const toggleBranchSelection = (branch: string) => {
-    setSelectedBranches(prev => 
-      prev.includes(branch) 
-        ? prev.filter(b => b !== branch)
-        : [...prev, branch]
-    );
+  const toggleAllBranches = (selectAll: boolean) => {
+    const newBranches = selectAll ? [...allBranches] : [];
+    setSelectedBranches(newBranches);
+    setCurrentDrive(prev => ({
+      ...(prev || {
+        id: 0,
+        company: '',
+        position: '',
+        applications: 0,
+        deadline: '',
+        status: 'Draft',
+        package: '',
+        eligibility: { ...defaultEligibility }
+      }),
+      eligibility: {
+        ...(prev?.eligibility || { ...defaultEligibility }),
+        branches: newBranches
+      }
+    }));
   };
 
-  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentDrive) return;
@@ -146,11 +168,9 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
     };
 
     if (driveToSubmit.id) {
-      // Update existing drive
       setDrives(drives.map(d => d.id === driveToSubmit.id ? driveToSubmit : d));
       setSuccessMessage('Drive updated successfully!');
     } else {
-      // Add new drive
       const newId = drives.length > 0 ? Math.max(...drives.map(d => d.id)) + 1 : 1;
       setDrives([{ ...driveToSubmit, id: newId }, ...drives]);
       setSuccessMessage('Drive added successfully!');
@@ -160,7 +180,6 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
-  // Handle deleting a drive
   const handleDeleteDrive = (id: number) => {
     if (window.confirm('Are you sure you want to delete this drive?')) {
       setDrives(drives.filter(drive => drive.id !== id));
@@ -169,7 +188,6 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
     }
   };
 
-  // Handle status change
   const handleStatusChange = (id: number, newStatus: Drive['status']) => {
     setDrives(drives.map(drive => 
       drive.id === id ? { ...drive, status: newStatus } : drive
@@ -179,7 +197,6 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
-  // Handle exporting data
   const handleExport = () => {
     const csvContent = [
       ['Company', 'Position', 'Applications', 'Deadline', 'Package', 'Status', 'Eligibility Criteria'],
@@ -204,7 +221,6 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
     document.body.removeChild(link);
   };
 
-  // Filter and search drives
   const filteredDrives = drives
     .filter(drive => 
       drive.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -216,14 +232,12 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
 
   return (
     <div className="space-y-8 animate-slide-up">
-      {/* Success Message */}
       {successMessage && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in">
           {successMessage}
         </div>
       )}
 
-      {/* Status Change Dropdown Backdrop */}
       {statusChangeId !== null && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-30 z-40" 
@@ -231,7 +245,6 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
         ></div>
       )}
 
-      {/* Main Content */}
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
         <div className="p-6 border-b border-gray-100/50">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -312,7 +325,7 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
                       <button 
                         onClick={() => {
                           setCurrentDrive(drive);
-                          setEligibilityModalOpen(true);
+                          setIsModalOpen(true);
                         }}
                         className="text-indigo-600 hover:underline text-sm"
                       >
@@ -395,10 +408,9 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
         </div>
       </div>
 
-      {/* Add/Edit Drive Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md animate-scale-in">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl animate-scale-in">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-gray-800">
@@ -412,32 +424,32 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
                 </button>
               </div>
               
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
-                  <input
-                    type="text"
-                    name="company"
-                    value={currentDrive?.company || ''}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Position *</label>
-                  <input
-                    type="text"
-                    name="position"
-                    value={currentDrive?.position || ''}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
+                    <input
+                      type="text"
+                      name="company"
+                      value={currentDrive?.company || ''}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Position *</label>
+                    <input
+                      type="text"
+                      name="position"
+                      value={currentDrive?.position || ''}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Applications</label>
                     <input
@@ -463,43 +475,167 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
                       <option value="Archived">Archived</option>
                     </select>
                   </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Deadline *</label>
+                    <input
+                      type="date"
+                      name="deadline"
+                      value={currentDrive?.deadline || ''}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Package *</label>
+                    <input
+                      type="text"
+                      name="package"
+                      value={currentDrive?.package || ''}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Deadline *</label>
-                  <input
-                    type="date"
-                    name="deadline"
-                    value={currentDrive?.deadline || ''}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    required
-                  />
+                <div className="border-t border-gray-200 pt-6">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4">Eligibility Criteria</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Minimum CGPA</label>
+                      <input
+                        type="number"
+                        name="eligibility.minCGPA"
+                        value={currentDrive?.eligibility.minCGPA || 0}
+                        onChange={handleInputChange}
+                        min="0"
+                        max="10"
+                        step="0.1"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Max Backlogs</label>
+                      <input
+                        type="number"
+                        name="eligibility.maxBacklogs"
+                        value={currentDrive?.eligibility.maxBacklogs || 0}
+                        onChange={handleInputChange}
+                        min="0"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Batch Year</label>
+                      <input
+                        type="number"
+                        name="eligibility.batchYear"
+                        value={currentDrive?.eligibility.batchYear || new Date().getFullYear()}
+                        onChange={handleInputChange}
+                        min="2000"
+                        max={new Date().getFullYear() + 5}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">10th Percentage</label>
+                      <input
+                        type="number"
+                        name="eligibility.tenthPercentage"
+                        value={currentDrive?.eligibility.tenthPercentage || ''}
+                        onChange={handleInputChange}
+                        min="0"
+                        max="100"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">12th Percentage</label>
+                      <input
+                        type="number"
+                        name="eligibility.twelfthPercentage"
+                        value={currentDrive?.eligibility.twelfthPercentage || ''}
+                        onChange={handleInputChange}
+                        min="0"
+                        max="100"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Diploma Percentage</label>
+                      <input
+                        type="number"
+                        name="eligibility.diplomaPercentage"
+                        value={currentDrive?.eligibility.diplomaPercentage || ''}
+                        onChange={handleInputChange}
+                        min="0"
+                        max="100"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-medium text-gray-700">Eligible Branches</label>
+                      <div className="space-x-2">
+                        <button 
+                          type="button"
+                          onClick={() => toggleAllBranches(true)}
+                          className="text-xs text-indigo-600 hover:underline"
+                        >
+                          Select All
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => toggleAllBranches(false)}
+                          className="text-xs text-indigo-600 hover:underline"
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                    </div>
+                    <div className="border border-gray-300 rounded-lg p-4 max-h-40 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {allBranches.map(branch => (
+                        <div key={branch} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`branch-${branch}`}
+                            checked={selectedBranches.includes(branch)}
+                            onChange={() => toggleBranchSelection(branch)}
+                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                          />
+                          <label htmlFor={`branch-${branch}`} className="ml-2 text-sm text-gray-700">
+                            {branch}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Additional Requirements</label>
+                    <textarea
+                      name="eligibility.additionalRequirements"
+                      value={currentDrive?.eligibility.additionalRequirements || ''}
+                      onChange={handleInputChange}
+                      rows={3}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      placeholder="Any other specific requirements..."
+                    />
+                  </div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Package *</label>
-                  <input
-                    type="text"
-                    name="package"
-                    value={currentDrive?.package || ''}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setEligibilityModalOpen(true)}
-                    className="w-full px-4 py-2 border border-indigo-300 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
-                  >
-                    Set Eligibility Criteria
-                  </button>
-                </div>
-                
-                <div className="flex justify-end space-x-3 pt-4">
+                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
@@ -516,186 +652,6 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
                   </button>
                 </div>
               </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Eligibility Criteria Modal */}
-      {eligibilityModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md animate-scale-in">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-800">
-                  Eligibility Criteria
-                </h3>
-                <button 
-                  onClick={() => setEligibilityModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Minimum CGPA</label>
-                    <input
-                      type="number"
-                      name="minCGPA"
-                      value={currentDrive?.eligibility?.minCGPA || 0}
-                      onChange={handleEligibilityChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      min="0"
-                      max="10"
-                      step="0.1"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Max Backlogs</label>
-                    <input
-                      type="number"
-                      name="maxBacklogs"
-                      value={currentDrive?.eligibility?.maxBacklogs || 0}
-                      onChange={handleEligibilityChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      min="0"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Batch Year</label>
-                  <input
-                    type="number"
-                    name="batchYear"
-                    value={currentDrive?.eligibility?.batchYear || new Date().getFullYear()}
-                    onChange={handleEligibilityChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    min="2000"
-                    max={new Date().getFullYear() + 5}
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Eligible Branches</label>
-                  <div className="border border-gray-300 rounded-lg p-2 max-h-40 overflow-y-auto">
-                    {allBranches.map(branch => (
-                      <div key={branch} className="flex items-center mb-2">
-                        <input
-                          type="checkbox"
-                          id={`branch-${branch}`}
-                          checked={selectedBranches.includes(branch)}
-                          onChange={() => toggleBranchSelection(branch)}
-                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                        />
-                        <label htmlFor={`branch-${branch}`} className="ml-2 text-sm text-gray-700">
-                          {branch}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Additional Requirements</label>
-                  <textarea
-                    name="additionalRequirements"
-                    value={currentDrive?.eligibility?.additionalRequirements || ''}
-                    onChange={handleEligibilityChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    rows={3}
-                    placeholder="Any other specific requirements..."
-                  />
-                </div>
-                
-                <div className="flex justify-end space-x-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setEligibilityModalOpen(false)}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                  >
-                    Save Criteria
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* View Eligibility Criteria Modal */}
-      {currentDrive && eligibilityModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md animate-scale-in">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-800">
-                  Eligibility Criteria for {currentDrive.company}
-                </h3>
-                <button 
-                  onClick={() => setEligibilityModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Minimum CGPA</p>
-                    <p className="text-gray-800 font-medium">
-                      {currentDrive.eligibility?.minCGPA || 'Not specified'}
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Max Backlogs</p>
-                    <p className="text-gray-800 font-medium">
-                      {currentDrive.eligibility?.maxBacklogs || 'Not specified'}
-                    </p>
-                  </div>
-                </div>
-                
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Batch Year</p>
-                  <p className="text-gray-800 font-medium">
-                    {currentDrive.eligibility?.batchYear || 'Not specified'}
-                  </p>
-                </div>
-                
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Eligible Branches</p>
-                  <p className="text-gray-800 font-medium">
-                    {currentDrive.eligibility?.branches?.length 
-                      ? currentDrive.eligibility.branches.join(', ') 
-                      : 'All branches'}
-                  </p>
-                </div>
-                
-                {currentDrive.eligibility?.additionalRequirements && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Additional Requirements</p>
-                    <p className="text-gray-800 font-medium">
-                      {currentDrive.eligibility.additionalRequirements}
-                    </p>
-                  </div>
-                )}
-                
-                <div className="flex justify-end pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setEligibilityModalOpen(false)}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
