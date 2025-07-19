@@ -20,9 +20,9 @@ const Sidebar: React.FC<SidebarProps> = ({ items, activeTab, setActiveTab, onLog
       <div className="p-6 border-b border-gray-100">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-lg">P</span>
+            <span className="text-white font-bold text-lg">S</span>
           </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">PlacementPro</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">SwiftBridge</h1>
         </div>
       </div>
       
