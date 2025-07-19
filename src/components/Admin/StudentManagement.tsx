@@ -10,18 +10,18 @@ interface Student {
 }
 
 interface StudentManagementProps {
-  data: {
-    eligibleStudents: Student[];
-  };
+  students: Student[];
 }
 
-const StudentManagement: React.FC<StudentManagementProps> = ({ data }) => {
+const StudentManagement: React.FC<StudentManagementProps> = ({ students }) => {
   return (
     <div className="space-y-8 animate-slide-up">
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
         <div className="p-6 border-b border-gray-100/50">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Student Management</h2>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Student Management
+            </h2>
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-400 h-5 w-5" />
@@ -56,8 +56,11 @@ const StudentManagement: React.FC<StudentManagementProps> = ({ data }) => {
                 </tr>
               </thead>
               <tbody>
-                {data.eligibleStudents.map((student, index) => (
-                  <tr key={index} className="border-t border-gray-100/50 hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/50 transition-all duration-300">
+                {students.map((student, index) => (
+                  <tr
+                    key={index}
+                    className="border-t border-gray-100/50 hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/50 transition-all duration-300"
+                  >
                     <td className="py-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
