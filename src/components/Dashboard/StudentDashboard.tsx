@@ -15,8 +15,8 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import Sidebar from '../Layout/Sidebar';
 import Header from '../Layout/Header';
+import StudentProfileTab from './StudentProfileTab';
 
-// Interface Definitions
 interface Drive {
   id: number;
   company: string;
@@ -54,6 +54,8 @@ interface StudentProfile {
   tenthPercentage?: number;
   twelfthPercentage?: number;
   diplomaPercentage?: number;
+  skills?: string[];
+  resumeUrl?: string;
 }
 
 interface SidebarItem {
@@ -76,7 +78,6 @@ interface StatCardProps {
   color: string;
 }
 
-// Stat Card Component
 const StatCard: React.FC<StatCardProps> = ({ icon: Icon, value, label, color }) => (
   <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
     <div className="flex items-center">
@@ -91,7 +92,6 @@ const StatCard: React.FC<StatCardProps> = ({ icon: Icon, value, label, color }) 
   </div>
 );
 
-// Drive Card Component
 const DriveCard: React.FC<DriveCardProps> = ({ drive, onApply, applied }) => {
   const isNew = drive.createdAt && new Date(drive.createdAt) > new Date(Date.now() - 86400000);
 
@@ -134,11 +134,10 @@ const DriveCard: React.FC<DriveCardProps> = ({ drive, onApply, applied }) => {
   );
 };
 
-// Main Student Dashboard Component
 const StudentDashboard: React.FC<{
   drives?: Drive[];
   applications?: Application[];
-  studentProfile: StudentProfile;
+  studentProfile: StudentProfile | null;
 }> = ({ 
   drives = [], 
   applications = [], 
@@ -148,10 +147,22 @@ const StudentDashboard: React.FC<{
   const [activeTab, setActiveTab] = useState('dashboard');
   const [filteredDrives, setFilteredDrives] = useState<Drive[]>([]);
   const [hasNewDrives, setHasNewDrives] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
 
-  // Filter eligible drives
   useEffect(() => {
-    if (!studentProfile) return;
+    // Simulate loading (replace with actual data fetching)
+    const timer = setTimeout(() => {
+      setProfileLoading(false);
+    }, 1500);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!studentProfile) {
+      console.warn('Student profile data not loaded yet');
+      return;
+    }
 
     const eligibleDrives = drives.filter(drive => {
       if (drive.status !== 'Active') return false;
@@ -183,7 +194,6 @@ const StudentDashboard: React.FC<{
     // TODO: Implement actual application logic
   };
 
-  // Sidebar items configuration
   const sidebarItems: SidebarItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: GraduationCap },
     { id: 'drives', label: 'Placement Drives', icon: Briefcase, badge: hasNewDrives },
@@ -192,7 +202,6 @@ const StudentDashboard: React.FC<{
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
-  // Empty state component
   const renderEmptyState = (message: string, icon?: React.ReactNode) => (
     <div className="text-center py-12 flex flex-col items-center">
       {icon || <AlertCircle className="h-12 w-12 text-gray-400 mb-4" />}
@@ -200,7 +209,6 @@ const StudentDashboard: React.FC<{
     </div>
   );
 
-  // Dashboard Tab
   const renderDashboard = () => (
     <div className="space-y-8 animate-slide-up">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-scale-in">
@@ -238,7 +246,6 @@ const StudentDashboard: React.FC<{
     </div>
   );
 
-  // Drives Tab
   const renderDrives = () => (
     <div className="space-y-6 animate-slide-up">
       <div className="flex justify-between items-center">
@@ -267,7 +274,6 @@ const StudentDashboard: React.FC<{
     </div>
   );
 
-  // Applications Tab
   const renderApplications = () => (
     <div className="space-y-6 animate-slide-up">
       <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
@@ -326,33 +332,13 @@ const StudentDashboard: React.FC<{
     </div>
   );
 
-  // Profile Tab
   const renderProfile = () => (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 animate-scale-in p-6">
-      <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-6">
-        Profile Information
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-700 font-medium">
-        <div><span className="font-bold">Name:</span> {user?.name}</div>
-        <div><span className="font-bold">Email:</span> {user?.email}</div>
-        <div><span className="font-bold">GPA:</span> {studentProfile.gpa}</div>
-        <div><span className="font-bold">Backlogs:</span> {studentProfile.backlogs}</div>
-        <div><span className="font-bold">Branch:</span> {studentProfile.branch}</div>
-        <div><span className="font-bold">Batch Year:</span> {studentProfile.batchYear}</div>
-        {studentProfile.tenthPercentage && (
-          <div><span className="font-bold">10th Percentage:</span> {studentProfile.tenthPercentage}%</div>
-        )}
-        {studentProfile.twelfthPercentage && (
-          <div><span className="font-bold">12th Percentage:</span> {studentProfile.twelfthPercentage}%</div>
-        )}
-        {studentProfile.diplomaPercentage && (
-          <div><span className="font-bold">Diploma Percentage:</span> {studentProfile.diplomaPercentage}%</div>
-        )}
-      </div>
-    </div>
+    <StudentProfileTab 
+      profile={studentProfile} 
+      loading={profileLoading}
+    />
   );
 
-  // Main Render
   return (
     <div className="flex h-screen bg-gradient-to-br from-indigo-50/50 via-purple-50/30 to-pink-50/50">
       <Sidebar 
