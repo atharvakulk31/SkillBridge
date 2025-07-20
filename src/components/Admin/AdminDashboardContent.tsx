@@ -4,7 +4,7 @@ import { Users, Briefcase, BarChart3, Building2 } from 'lucide-react';
 interface StatItem {
   label: string;
   value: string;
-  icon: string;
+  icon: React.ComponentType<{ className?: string }>; // Proper type for Lucide icons
 }
 
 interface DriveItem {
@@ -25,27 +25,17 @@ interface AdminDashboardContentProps {
 }
 
 const AdminDashboardContent: React.FC<AdminDashboardContentProps> = ({ data }) => {
-  const getIconComponent = (iconName: string) => {
-    switch (iconName) {
-      case 'Users': return Users;
-      case 'Briefcase': return Briefcase;
-      case 'BarChart3': return BarChart3;
-      case 'Building2': return Building2;
-      default: return Users;
-    }
-  };
-
   return (
     <div className="space-y-8 animate-slide-up">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-scale-in">
         {data.stats.map((stat, index) => {
-          const IconComponent = getIconComponent(stat.icon);
+          const Icon = stat.icon; // Get the icon component
           return (
             <div key={index} className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-white/50 hover:transform hover:scale-105 group">
               <div className="flex items-center">
                 <div className={`p-3 rounded-xl shadow-lg group-hover:shadow-xl transition-all ${index === 0 ? 'bg-blue-500' : index === 1 ? 'bg-green-500' : index === 2 ? 'bg-purple-500' : 'bg-orange-500'} text-white`}>
-                  <IconComponent className="h-6 w-6" />
+                  <Icon className="h-6 w-6" />
                 </div>
                 <div className="ml-4">
                   <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{stat.value}</p>
