@@ -92,16 +92,98 @@ const DriveManagement: React.FC<{ data: { recentDrives: Drive[] } }> = ({ data }
     'Biotechnology'
   ];
 
+  // Sample data for drives
+  const sampleDrives: Drive[] = [
+    {
+      id: 1,
+      company: 'TechCorp Solutions',
+      position: 'Software Engineer',
+      applications: 42,
+      deadline: '2023-12-15',
+      status: 'Active',
+      package: '$120,000',
+      eligibility: {
+        minCGPA: 3.5,
+        maxBacklogs: 2,
+        branches: ['Computer Science', 'Information Technology'],
+        batchYear: 2023,
+        additionalRequirements: 'Strong problem-solving skills'
+      }
+    },
+    {
+      id: 2,
+      company: 'DataSystems Inc.',
+      position: 'Data Analyst',
+      applications: 28,
+      deadline: '2023-11-30',
+      status: 'Active',
+      package: '$95,000',
+      eligibility: {
+        minCGPA: 3.2,
+        maxBacklogs: 3,
+        branches: ['Computer Science', 'Information Technology', 'Electronics'],
+        batchYear: 2023,
+        additionalRequirements: 'Experience with SQL and Python'
+      }
+    },
+    {
+      id: 3,
+      company: 'CloudNine Technologies',
+      position: 'DevOps Engineer',
+      applications: 15,
+      deadline: '2024-01-10',
+      status: 'Draft',
+      package: '$110,000',
+      eligibility: {
+        minCGPA: 3.0,
+        maxBacklogs: 4,
+        branches: ['Computer Science', 'Information Technology', 'Electrical'],
+        batchYear: 2023,
+        additionalRequirements: 'AWS certification preferred'
+      }
+    },
+    {
+      id: 4,
+      company: 'Quantum Innovations',
+      position: 'Research Scientist',
+      applications: 8,
+      deadline: '2023-10-20',
+      status: 'Archived',
+      package: '$140,000',
+      eligibility: {
+        minCGPA: 3.8,
+        maxBacklogs: 0,
+        branches: ['Computer Science', 'Electronics', 'Biotechnology'],
+        batchYear: 2023,
+        additionalRequirements: 'Published research papers preferred'
+      }
+    },
+    {
+      id: 5,
+      company: 'GreenEnergy Solutions',
+      position: 'Sustainability Engineer',
+      applications: 22,
+      deadline: '2023-12-05',
+      status: 'Active',
+      package: '$105,000',
+      eligibility: {
+        minCGPA: 3.3,
+        maxBacklogs: 3,
+        branches: ['Mechanical', 'Electrical', 'Chemical'],
+        batchYear: 2023,
+        additionalRequirements: 'Passion for renewable energy'
+      }
+    }
+  ];
+
   useEffect(() => {
     try {
       // Simulate API call with timeout
       setLoading(true);
       setTimeout(() => {
-        if (data && data.recentDrives) {
-          setDrives(data.recentDrives);
-        } else {
-          setErrorMessage('No drive data available');
-        }
+        // Use the data prop if available, otherwise use sample data
+        const driveData = data?.recentDrives?.length ? data.recentDrives : sampleDrives;
+        setDrives(driveData);
         setLoading(false);
       }, 800);
     } catch (error) {
