@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
+<<<<<<< HEAD
   Shield, Briefcase, Users, Building2, BarChart3, Settings,
   PieChart, LineChart, FileText, Mail, Phone, User, Lock, Bell, Database
+=======
+  Shield, Briefcase, Users, Building2, BarChart3, Settings
+>>>>>>> bcf7319d76ba708a89b996555627f42292704cb1
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import Sidebar from '../Layout/Sidebar';
@@ -19,6 +23,17 @@ interface SidebarItem {
   icon: React.ComponentType<any>;
 }
 
+interface EligibilityCriteria {
+  minCGPA: number;
+  maxBacklogs: number;
+  branches: string[];
+  batchYear: number;
+  additionalRequirements: string;
+  tenthPercentage?: number;
+  twelfthPercentage?: number;
+  diplomaPercentage?: number;
+}
+
 interface Drive {
   id: number;
   company: string;
@@ -27,6 +42,7 @@ interface Drive {
   deadline: string;
   status: 'Draft' | 'Active' | 'Archived';
   package: string;
+  eligibility: EligibilityCriteria;
 }
 
 interface Company {
@@ -283,7 +299,16 @@ const AdminDashboard: React.FC = () => {
               applications: 145,
               deadline: '2025-02-15',
               status: 'Active',
-              package: '₹25 LPA'
+              package: '₹25 LPA',
+              eligibility: {
+                minCGPA: 7.5,
+                maxBacklogs: 0,
+                branches: ['Computer Science', 'Information Technology'],
+                batchYear: 2025,
+                additionalRequirements: 'Strong problem solving skills',
+                tenthPercentage: 75,
+                twelfthPercentage: 80
+              }
             },
             {
               id: 2,
@@ -292,7 +317,16 @@ const AdminDashboard: React.FC = () => {
               applications: 89,
               deadline: '2025-02-20',
               status: 'Active',
-              package: '₹50k/month'
+              package: '₹50k/month',
+              eligibility: {
+                minCGPA: 7.0,
+                maxBacklogs: 1,
+                branches: ['Computer Science', 'Electronics'],
+                batchYear: 2025,
+                additionalRequirements: 'Basic programming knowledge',
+                tenthPercentage: 70,
+                twelfthPercentage: 75
+              }
             },
             {
               id: 3,
@@ -301,7 +335,16 @@ const AdminDashboard: React.FC = () => {
               applications: 67,
               deadline: '2025-02-25',
               status: 'Draft',
-              package: '₹22 LPA'
+              package: '₹22 LPA',
+              eligibility: {
+                minCGPA: 6.5,
+                maxBacklogs: 2,
+                branches: ['Computer Science', 'Information Technology', 'Electronics'],
+                batchYear: 2025,
+                additionalRequirements: 'Web development experience preferred',
+                tenthPercentage: 65,
+                twelfthPercentage: 70
+              }
             }
           ],
           eligibleStudents: [
@@ -376,7 +419,7 @@ const AdminDashboard: React.FC = () => {
       case 'students':
         return <StudentManagement students={data.eligibleStudents} />;
       case 'drives':
-        return <DriveManagement drives={data.recentDrives} />;
+        return <DriveManagement data={{ recentDrives: data.recentDrives }} />;
       case 'companies':
         return <CompanyRelations companies={data.companies} />;
       case 'analytics':
